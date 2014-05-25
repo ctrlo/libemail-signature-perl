@@ -1,0 +1,84 @@
+=head1 NAME
+
+Email::Signature - adds a signature and attachments to a Mail::Message object
+
+=head1 VERSION
+
+Version 1.00
+
+=head1 SYNOPSIS
+
+    use Email::Signature;
+    my $msg = Mail::Message->new...
+
+    my $emailsig = Email::Signature->new;
+
+    # Add footer text
+    my $footer = {
+        plain => "Plain footer text",
+        html  => "<b>HTML footer</b>"
+    }
+
+    $emailsig->footer($footer);
+
+    # Add some attachments
+    # First an inline one
+    my $inline = {
+        cid         = cid001@domain.com,
+        file        = /var/emailsig/image1.jpeg,
+        mimetype    = image/jpeg,
+        disposition = inline,
+    };
+    $emailsig->attach($inline);
+
+    # Now attached normally
+    my $attach = {
+        file    = /var/emails/image2.jpeg,
+        mimetype = image/jpeg,
+    };
+    $emailsig->attach($attach);
+
+    $msg = $emailsig->signature($msg);
+
+=head1 DESCRIPTION
+
+Email::Signature is used to add a signature to emails. It tries to be as intelligent as possible. It attempts to position the signature as would be required by a normal user: for a reply that is top-posted, it tries to put it after the user's reply; for a bottom-posted or inline reply it adds it at the end.
+
+Signatures can consist of HTML and plain text, plus attachments that can be either inline or normal attachments.
+
+=head1 FUNCTIONS
+
+=head2 new
+
+C<new> creates a new Email::Signature. It takes no arguments.
+
+=head2 footer($hashref)
+
+C<footer()> specifies the footer text for the signature. It takes a hashref, with the keys C<html> and C<plain>. HTML can include image tags that specify the content-IDs of images added later.
+
+=head2 attach($hashref)
+
+C<attach()> attaches a single file. It can be called multiple times to attach several files. It takes a hashref, which at a minimum must specify C<file> and C<mimetype> keys. In addition, it may also contain C<cid> and C<disposition> keys.
+
+=head2 signature(Mail::Message)
+
+C<signature()> adds the previously defined signature to a Mail::Message. It returns the Mail::Message object with the signature added.
+
+=head1 CAVEATS
+
+Attempting to find the correct place to insert the footer is difficult. Only a limited number of email clients and languages have been provisioned for and tested. Please help by providing patches for better support.
+
+=head1 BUGS
+
+Please use the libemail-signature-perl Github page.
+
+=head1 SUPPORT
+
+Please use the libemail-signature-perl Github page.
+
+=head1 COPYRIGHT & LICENCE
+
+Copyright 2014 Ctrl O Ltd
+
+You may distribute this code under the same terms as Perl itself.
+
