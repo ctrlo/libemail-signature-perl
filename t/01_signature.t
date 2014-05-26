@@ -29,8 +29,7 @@ my $footer = {
   html  => $footerh
 };
 
-my $emailsig = Email::Signature->new;
-$emailsig->footer($footer);
+my $emailsig = Email::Signature->new({ footer => $footer});
 
 my $newplainmsg = $emailsig->signature($plainmsg);
 ok( $plainmsg->body->string.$footerp."\n\n" eq $newplainmsg->body->string );

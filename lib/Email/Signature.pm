@@ -68,6 +68,10 @@ C<new> creates a new Email::Signature. It takes no arguments.
 sub new($%)
 {   my ($class, $options) = @_;
     my $self   = bless {}, $class;
+    if ($options && $options->{footer})
+    {
+        footer($self, $options->{footer});
+    }
     $self;
 }
 
