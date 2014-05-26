@@ -24,32 +24,28 @@ our $VERSION = '1.00';
     use Email::Signature;
     my $msg = Mail::Message->new...
 
-    my $emailsig = Email::Signature->new;
-
-    # Add footer text
+    # Footer text
     my $footer = {
         plain => "Plain footer text",
         html  => "<b>HTML footer</b>"
     }
 
-    $emailsig->footer($footer);
+    my $emailsig = Email::Signature->new({ footer => $footer });
 
     # Add some attachments
     # First an inline one
-    my $inline = {
+    $emailsig->attach {
         cid         = cid001@domain.com,
         file        = /var/emailsig/image1.jpeg,
         mimetype    = image/jpeg,
         disposition = inline,
     };
-    $emailsig->attach($inline);
 
     # Now attached normally
-    my $attach = {
+    $emailsig->attach {
         file    = /var/emails/image2.jpeg,
         mimetype = image/jpeg,
     };
-    $emailsig->attach($attach);
 
     $msg = $emailsig->signature($msg);
 
