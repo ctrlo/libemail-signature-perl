@@ -47,7 +47,7 @@ our $VERSION = '1.00';
         mimetype = image/jpeg,
     };
 
-    $msg = $emailsig->signature($msg);
+    $msg = $emailsig->sign($msg);
 
 =head1 DESCRIPTION
 
@@ -455,18 +455,18 @@ sub _image
     );
 }
 
-=head2 signature(Mail::Message)
+=head2 sign(Mail::Message)
 
-C<signature()> adds the previously defined signature to a Mail::Message. It returns the Mail::Message object with the signature added.
+C<sign()> adds the previously defined signature to a Mail::Message. It returns the Mail::Message object with the signature added.
 
 =cut
 
-sub signature
+sub sign
 {   my ($self, $msg) = @_;
     my $footer       = $self->{footer};
     my $attachments  = $self->{attachments};
 
-    confess "signature must be called with a Mail::Message object reference"
+    confess "sign must be called with a Mail::Message object reference"
         unless ref $msg and $msg->isa('Mail::Message');
 
     # Attachments can be added in 2 places:
