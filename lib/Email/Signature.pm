@@ -61,7 +61,7 @@ Signatures can consist of HTML and plain text, plus attachments that can be eith
 
 =head2 new
 
-C<new> creates a new Email::Signature. It takes no arguments.
+C<new> creates a new Email::Signature. It takes an optional argument of a hash with the key 'footer', containing the footer as per C<footer>.
 
 =cut
 
