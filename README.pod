@@ -46,11 +46,15 @@ Signatures can consist of HTML and plain text, plus attachments that can be eith
 
 =head2 new
 
-C<new> creates a new Email::Signature. It takes an optional argument of a hash with the key 'footer', containing the footer as per C<footer>.
+C<new> creates a new Email::Signature. It takes an optional argument of a hash with the key 'footer', containing the footer as per C<footer>, and/or key 'addHtmlPart' as per C<addHtmlPart>.
 
 =head2 footer($hashref)
 
 C<footer()> specifies the footer text for the signature. It takes a hashref, with the keys C<html> and C<plain>. HTML can include image tags that specify the content-IDs of images added later.
+
+=head2 addHtmlPart(0|1)
+
+C<addHtmlPart()> specifies whether to add a HTML part if it is missing. It takes a value of 0 or 1 as required. If called without any arguments it returns the current setting.
 
 =head2 attach($hashref)
 
