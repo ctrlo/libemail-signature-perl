@@ -31,9 +31,9 @@ my $footer = {
 
 my $emailsig = Email::Signature->new({ footer => $footer});
 
-my $newplainmsg = $emailsig->signature($plainmsg);
+my $newplainmsg = $emailsig->sign($plainmsg);
 ok( $plainmsg->body->string.$footerp."\n\n" eq $newplainmsg->body->string );
 
-my $newhtmlmsg = $emailsig->signature($htmlmsg);
+my $newhtmlmsg = $emailsig->sign($htmlmsg);
 ok( "<html>$text$footerh</html>" eq $newhtmlmsg->body->string );
 
