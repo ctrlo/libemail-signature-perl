@@ -6,6 +6,7 @@ use strict;
 use Carp;
 use Mojo::DOM;
 use Mail::Message::Body::Lines;
+use Mail::Message::Body::String;
 
 =head1 NAME
 
@@ -61,16 +62,23 @@ Signatures can consist of HTML and plain text, plus attachments that can be eith
 
 =head2 new
 
-C<new> creates a new Email::Signature. It takes an optional argument of a hash with the key 'footer', containing the footer as per C<footer>.
+C<new> creates a new Email::Signature. It takes an optional argument of a hash with the key 'footer', containing the footer as per C<footer>, and/or key 'addHtmlPart' as per C<addHtmlPart>.
 
 =cut
 
 sub new($%)
 {   my ($class, $options) = @_;
     my $self   = bless {}, $class;
-    if ($options && $options->{footer})
+    if ($options)
     {
-        footer($self, $options->{footer});
+        if ($options->{footer})
+        {
+           footer($self, $options->{footer});
+        }
+        if ($options->{addHtmlPart})
+        {
+            addHtmlPart($self, 1);
+        }
     }
     $self;
 }
@@ -105,6 +113,22 @@ sub footer
         }
     }
     $self->{footer};
+}
+
+=head2 addHtmlPart(0|1)
+
+C<addHtmlPart()> specifies whether to add a HTML part if it is missing. It takes a value of 0 or 1 as required. If called without any arguments it returns the current setting.
+
+=cut
+
+sub addHtmlPart
+{
+    my ($self, $value) = @_;
+    if (defined $value)
+    {
+        $self->{addhtmlpart} = $value ? 1 : 0;
+    }
+    $self->{addhtmlpart} ? 1 : 0;
 }
 
 =head2 attach($hashref)
@@ -439,6 +463,43 @@ sub _add_footer
 
 }
 
+sub _add_html_alternative($$)
+{   my ($msg, $plain_part) = @_;
+    my $body = $plain_part->body;
+    $body->mimeType eq 'text/plain'
+        or return $plain_part;
+
+    # Is it already part of an alternative with HTML part?
+    my $parent = $plain_part->container;
+    if($parent && $parent->mimeType eq 'multipart/alternative')
+    {   # do we already have a HTML alternative?
+        $_->body->mimeType eq 'text/html' && return $plain_part
+            for $parent->parts;
+    }
+
+    my $html_text = $body->decoded;
+    $html_text =~ s/\r?\n/<br>\n/g;
+
+    my $html_body = Mail::Message::Body::String->new
+      ( based_on  => $body
+      , mime_type => 'text/html'
+      , data      => $html_text
+      , charset   => 'utf8'
+      , transfer_encoding => '8bit'
+      );
+
+    # The body's contain content info for new headers
+    my $m = Mail::Message::Body::Multipart->new
+      ( mime_type => 'multipart/alternative'
+      , parts     => [ $body, $html_body ]
+      , preamble  => undef   # add some text?
+      );
+
+    # $plain_part may be top-level msg. Keep the headers, except about content
+    $plain_part->body($m);
+    $plain_part;
+}
+
 sub _image
 {   my $img = shift;
     my $i = {
@@ -468,6 +529,18 @@ sub sign
 
     confess "sign must be called with a Mail::Message object reference"
         unless ref $msg and $msg->isa('Mail::Message');
+
+    # First, add HTML alternative if required. Do it before the
+    # second rebuild, otherwise it gets messy with signatures
+    # being added multiple times for plain/html
+    if ($self->{addhtmlpart})
+    {
+        my $extra_rules = [\&_add_html_alternative];
+        $msg = $msg->rebuild(
+            keep_message_id => 1,
+            extra_rules     => $extra_rules,
+        );
+    }
 
     # Attachments can be added in 2 places:
     # - When the signature text is added, for inline images in HTML
