@@ -258,15 +258,28 @@ sub _add_attachments
     $addatt;
 }
 
+# XXX Update regex to match more languages and mail clients
+my $fromrx = 'From:\h+.*|On\h+.*\h+wrote:';
+
+sub _prepend_sig
+{
+    my ($body, $sig) = @_;
+    unless ($body =~ /^($fromrx)(\h*<br>)/i) # Probably bottom-post or inline reply
+    {
+        if ($body =~ s/^($fromrx)(\h*<br>)/$sig$1$2/im)
+        {
+            return $body;
+        }
+    }
+    0;
+}
+
 sub _add_footer
 {
     my $footer      = shift;
     my $plain       = $footer->{plain} || '';
     my $html        = $footer->{html}  || '';
     my $attachments = shift;
-
-    # XXX Update regex to match more languages and mail clients
-    my $fromrx = 'From:\h+.*|On\h+.*\h+wrote:';
 
     my $need_plain = 1;
     my $wrap_text = sub ($$@)
@@ -364,31 +377,26 @@ sub _add_footer
             if ($need_html)
             {
                 my $new = $blockquote->parent->content;
-                unless ($new =~ /^($fromrx)(<br>)/i) # Probably bottom-post or inline reply
+                if ($new = _prepend_sig $new, $html)
                 {
-                    if ($new =~ s/^($fromrx)/$html$1$2/im)
-                    {
-                        $blockquote->parent->content($new);
-                        $need_html = 0;
-                    }
+                    $blockquote->parent->content($new);
+                    $need_html = 0;
                 }
             }
         }
 
-        # If not done, then probably no quoted text
         if ($need_html)
         {
-            if (my $body = $dom->at('body'))
+            # Try to find the main text. Check body, then html, then whole content
+            my $body = $dom->at('body') || $dom->at('html') || $dom;
+            if (my $new = _prepend_sig $body, $html)
             {
-                $dom = $body->append_content($html)->root;
+                # Reply found
+                $body->replace($new);
             }
-            elsif(my $h = $dom->at('html'))
-            {
-                $dom = $h->append_content($html)->root;
-            }
-            else
-            {
-                $dom = $dom.$html;
+            else {
+                # Nothing found, tack on the end
+                $body->append_content($html)->root;
             }
         }
 
@@ -477,8 +485,8 @@ sub _add_html_alternative($$)
             for $parent->parts;
     }
 
-    my $html_text = $body->decoded;
-    $html_text =~ s/\r?\n/<br>\n/g;
+    my $html_text = $body->decoded->string;
+    $html_text =~ s/\r?\n(?!$)/<br>\n/g; # Body gains extra CR from somewhere, don't replace
 
     my $html_body = Mail::Message::Body::String->new
       ( based_on  => $body
