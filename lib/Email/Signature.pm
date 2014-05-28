@@ -482,7 +482,7 @@ sub _add_html_alternative($$)
     if($parent && $parent->mimeType eq 'multipart/alternative')
     {   # do we already have a HTML alternative?
         $_->body->mimeType eq 'text/html' && return $plain_part
-            for $parent->parts;
+            for $parent->parts('RECURSE');
     }
 
     my $html_text = $body->decoded->string;
