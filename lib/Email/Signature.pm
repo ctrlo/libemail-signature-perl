@@ -492,7 +492,6 @@ sub _add_html_alternative($$)
       ( based_on  => $body
       , mime_type => 'text/html'
       , data      => $html_text
-      , charset   => 'utf8'
       , transfer_encoding => '8bit'
       );
 
