@@ -400,12 +400,13 @@ sub _add_footer
             }
         }
 
+        my $charset = $part->body->charset // "utf-8"; # Some poor clients do not set this when needed
         my $newbody = (ref $decoded)->new(
             based_on  => $decoded,
             data      => "$dom",   # Force stringify
         )->encode(
             transfer_encoding => $part->body->transferEncoding,
-            charset   => $part->body->charset,
+            charset   => $charset,
         );
 
         my $newpart = (ref $part)->new(
