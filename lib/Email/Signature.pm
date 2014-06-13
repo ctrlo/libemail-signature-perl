@@ -259,7 +259,7 @@ sub _add_attachments
 }
 
 # XXX Update regex to match more languages and mail clients
-my $fromrx = 'From:\h+.*|On\h+.*\h+wrote:';
+my $fromrx = 'From:\h+.*|.{0,5}On\h+.*\h+wrote:';
 
 sub _prepend_sig
 {
