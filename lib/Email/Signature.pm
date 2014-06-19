@@ -7,6 +7,7 @@ use Carp;
 use Mojo::DOM;
 use Mail::Message::Body::Lines;
 use Mail::Message::Body::String;
+use HTML::Entities;
 
 =head1 NAME
 
@@ -400,10 +401,14 @@ sub _add_footer
             }
         }
 
+        # By default Mojo will return previously-encoded extended characters as
+        # encoded. This is a problem if the email's charset does not allow them.
+        # Therefore, HTML encode any extended chars
+        my $domprint = encode_entities($dom, '^\n\x20-\x7e');
         my $charset = $part->body->charset // "utf-8"; # Some poor clients do not set this when needed
         my $newbody = (ref $decoded)->new(
             based_on  => $decoded,
-            data      => "$dom",   # Force stringify
+            data      => $domprint,
         )->encode(
             transfer_encoding => $part->body->transferEncoding,
             charset   => $charset,
